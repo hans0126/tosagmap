@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+    .angular-google-map-container {
+        height: 600px;
+        width: 600px;
+    }
+    </style>
+    <!--
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB4iF-sbQ8jILkuFHfvcNSkytxmtkzppYA">
+    </script>
+    -->
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/lodash/lodash.js"></script>
+    <script src="http://cdn.rawgit.com/nmccready/angular-simple-logger/0.0.1/dist/index.js"></script>
+    <script src="dist/angular-google-maps_dev_mapped.js"></script>
+    <script>
+    function getNormalizedCoord(coord, zoom) {
+        var y = coord.y;
+        var x = coord.x;
+        var tileRange = 1 << zoom;
+        if (y < 0 || y >= tileRange) {
+            return null;
+        }
+        if (x < 0 || x >= tileRange) {
+            x = (x % tileRange + tileRange) % tileRange;
+        }
+        return {
+            x: x,
+            y: y
+        };
+    }
+
+    angular.module("markerCoordsTest", ['uiGmapgoogle-maps'])
+        .config(['uiGmapGoogleMapApiProvider', function(GoogleMapApi) {
+            GoogleMapApi.configure({
+                v: '3',
+                libraries: '',
+                key: 'AIzaSyB4iF-sbQ8jILkuFHfvcNSkytxmtkzppYA'
+            });
+        }])
+        .controller('abcd', ["$scope", "uiGmapGoogleMapApi", function($scope, uiGmapGoogleMapApi) {
+            var _self = this;
+
+            uiGmapGoogleMapApi.then(function(maps) {
+                //console.log(new maps.Size(256, 256));
+
+                _self.moonMapType = {
+                    getTileUrl: function(coord, zoom) {
+                        var normalizedCoord = getNormalizedCoord(coord, zoom);
+                        if (!normalizedCoord) {
+                            return null;
+                        }
+
+                        switch (zoom) {
+                            case 1:
+                                if (normalizedCoord.x == 1) {
+                                    return null;
+                                }
+                                break;
+
+                            case 2:
+                                if (normalizedCoord.x > 1 || normalizedCoord.y > 2) {
+                                    return null;
+                                }
+                                break;
+
+                            case 3:
+                                if (normalizedCoord.x > 2 || normalizedCoord.y > 5) {
+                                    return null;
+                                }
+                                break;
+
+                            case 4:
+                                if (normalizedCoord.x > 5 || normalizedCoord.y > 11) {
+                                    return null;
+                                }
+                                break;
+                        }
+
+                        var bound = Math.pow(2, zoom);
+                        return 'tile' +
+                            '/' + zoom + '/' + normalizedCoord.x + '/' +
+                            (normalizedCoord.y) + '.png';
+                    },
+                    tileSize: new maps.Size(256, 256),
+                    maxZoom: 4,
+                    minZoom: 2,
+                    name: 'moon'
+                };
+            });
+
+            _self.map = {
+                title: "A test map",
+                center: {
+                    latitude: 45.0,
+                    longitude: 11.0
+                },
+                zoom: 2,
+                options: {
+                    mapTypeId: 'moon',
+                    mapTypeControlOptions: {
+                        mapTypeIds: ['moon']
+                    },
+                    disableDefaultUI: true
+                }
+            };
+
+            _self.marker = {
+                id: 0,
+                coords: {
+                    latitude: 40.1451,
+                    longitude: -99.6680
+                },
+                options: {
+                    labelContent: "markerLabel with default 'coords'",
+                    labelAnchor: "0 0",
+                    labelClass: "marker-labels"
+                }
+            }
+
+        }])
+    </script>
+</head>
+
+<body ng-app="markerCoordsTest">
+    <div ng-controller="abcd as a">
+        <ui-gmap-google-map class="gmap" center="a.map.center" zoom="a.map.zoom" options="a.map.options">
+            <ui-gmap-marker coords="a.marker.coords" options="a.marker.options" idkey="a.marker.id">
+            </ui-gmap-marker>
+            <ui-gmap-map-type id="moon" options="a.moonMapType">
+            </ui-gmap-map-type>
+        </ui-gmap-google-map>
+    </div>
+</body>
+
+</html>
