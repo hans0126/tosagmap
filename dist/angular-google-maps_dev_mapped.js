@@ -10327,9 +10327,21 @@ MarkerLabel_.prototype.onRemove = function () {
  * @private
  */
 MarkerLabel_.prototype.draw = function () {
+
+  if(this.marker_.get("hideRange")){
+
+    if(this.map.getZoom()<this.marker_.get("hideRange")){
+        this.marker_.labelVisible = false;
+    }else{
+        this.marker_.labelVisible = true;
+    }
+  
+  }
+
+  
   this.setContent();
   this.setTitle();
-
+this.setStyles();
   if(this.marker_.get("labelVisible")){
     var computedStyle = getComputedStyle(this.labelDiv_, null);
     var _x = computedStyle.width;
@@ -10540,6 +10552,7 @@ function MarkerWithLabel(opt_options) {
   opt_options.labelClass = opt_options.labelClass || "markerLabels";
   opt_options.labelStyle = opt_options.labelStyle || {};
   opt_options.labelInBackground = opt_options.labelInBackground || false;
+  opt_options.hideRange = opt_options.hideRange || false;
   if (typeof opt_options.labelVisible === "undefined") {
     opt_options.labelVisible = true;
   }
