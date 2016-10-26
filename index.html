@@ -29,185 +29,31 @@
         float: left;
         width: 620px;
     }
+    /*hide google footer infomation*/
+    
+    a[href^="http://maps.google.com/maps"] {
+        display: none !important
+    }
+    
+    a[href^="https://maps.google.com/maps"] {
+        display: none !important
+    }
+    
+    .gmnoprint a,
+    .gmnoprint span,
+    .gm-style-cc {
+        display: none;
+    }
+    
+    .gmnoprint div {
+        background: none !important;
+    }
     </style>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/lodash/lodash.js"></script>
     <script src="http://cdn.rawgit.com/nmccready/angular-simple-logger/0.0.1/dist/index.js"></script>
     <script src="dist/angular-google-maps_dev_mapped.js"></script>
-    <script>
-    function getNormalizedCoord(coord, zoom) {
-        var y = coord.y;
-        var x = coord.x;
-        var tileRange = 1 << zoom;
-        if (y < 0 || y >= tileRange) {
-            return null;
-        }
-        if (x < 0 || x >= tileRange) {
-            x = (x % tileRange + tileRange) % tileRange;
-        }
-        return {
-            x: x,
-            y: y
-        };
-    }
-
-    var app = angular.module("markerCoordsTest", ['uiGmapgoogle-maps']);
-
-    app.config(['uiGmapGoogleMapApiProvider', function(GoogleMapApi) {
-        GoogleMapApi.configure({
-            v: '3',
-            libraries: '',
-            key: 'AIzaSyB4iF-sbQ8jILkuFHfvcNSkytxmtkzppYA'
-        });
-    }]);
-
-    app.factory('_', ['$window',
-        function($window) {
-            // place lodash include before angular
-            return $window._;
-        }
-    ])
-
-
-    app.controller('abcd', ["$scope", "uiGmapGoogleMapApi", "_", function($scope, uiGmapGoogleMapApi, _) {
-        var _self = this;
-
-        var dataFormat = {
-            id: null,
-            coords: {
-                latitude: null,
-                longitude: null
-            },
-            options: {
-                labelContent: null,
-                labelAnchor: "0 0",
-                labelClass: "marker-labels",
-                hideRange: 4
-            },
-            labelShow: null,
-            labelTitle: null
-        }
-
-        var markerIdCount = 0;
-
-        _self.editData = null;
-
-        _self.addProcess = function() {
-            _self.editData = angular.copy(dataFormat);
-        }
-
-        uiGmapGoogleMapApi.then(function(maps) {
-            //console.log(new maps.Size(256, 256));
-
-            _self.moonMapType = {
-                getTileUrl: function(coord, zoom) {
-                    var normalizedCoord = getNormalizedCoord(coord, zoom);
-                    if (!normalizedCoord) {
-                        return null;
-                    }
-
-                    switch (zoom) {
-                        case 1:
-                            if (normalizedCoord.x == 1) {
-                                return null;
-                            }
-                            break;
-
-                        case 2:
-                            if (normalizedCoord.x > 1 || normalizedCoord.y > 2) {
-                                return null;
-                            }
-                            break;
-
-                        case 3:
-                            if (normalizedCoord.x > 2 || normalizedCoord.y > 5) {
-                                return null;
-                            }
-                            break;
-
-                        case 4:
-                            if (normalizedCoord.x > 5 || normalizedCoord.y > 11) {
-                                return null;
-                            }
-                            break;
-                    }
-
-                    var bound = Math.pow(2, zoom);
-                    return 'tile' +
-                        '/' + zoom + '/' + normalizedCoord.x + '/' +
-                        (normalizedCoord.y) + '.png';
-                },
-                tileSize: new maps.Size(256, 256),
-                maxZoom: 4,
-                minZoom: 2,
-                name: 'moon'
-            };
-
-
-        });
-
-        _self.map = {
-            title: "A test map",
-            center: {
-                latitude: 49.1529,
-                longitude: -119.1796
-            },
-            zoom: 2,
-            options: {
-                mapTypeId: 'moon',
-                mapTypeControlOptions: {
-                    mapTypeIds: ['moon']
-                },
-                disableDefaultUI: true
-            },
-            events: {
-                click: function(mapModel, eventName, originalEventArgs) {
-                    if (_self.editData) {
-                        var e = originalEventArgs[0];
-                        _self.editData.coords.latitude = e.latLng.lat();
-                        _self.editData.coords.longitude = e.latLng.lng();
-                        $scope.$apply();
-                    }
-                }
-            }
-        };
-
-        _self.marker = []
-
-        _self.addData = function() {
-
-            if (!_self.editData.coords.latitude || !_self.editData.coords.longitude) {
-                return;
-            }
-
-            markerIdCount++
-            _self.editData.id = markerIdCount;
-            _self.marker.push(angular.copy(_self.editData));
-            _self.editData = null;
-
-            //console.log(_.find(_self.marker,{id:0}));
-        }
-
-        _self.markerEvent = {
-            click: function(marker, eventName, model) {
-                var _key = marker.key;
-                _.find(_self.marker, function(o) {
-                    if (o.id != _key) {
-                        o.labelShow = false;
-                    } else {
-                        o.labelShow = true;
-                    }
-                })
-            }
-        }
-
-        _self.moveTo = function(_coords) {
-            _self.map.center.latitude = _coords.latitude;
-            _self.map.center.longitude = _coords.longitude;
-        }
-
-    }]);
-    </script>
+    <script src="lib/app.js"></script>
 </head>
 
 <body ng-app="markerCoordsTest">
@@ -222,20 +68,24 @@
             </ui-gmap-google-map>
         </div>
         <div>
-            <button ng-click='a.addProcess()'>add</button>
-            <button ng-click='a.closeAllWindow()'>close window</button>
-            <table ng-if="a.editData">
+            <button ng-click='a.addProcess()' ng-show='!a.ctrl.editMode'>add</button>
+            <button ng-click='a.ctrl.changeMode()'>{{a.ctrl.modeBtnTxt}}</button>
+            <table ng-if="a.currentMarkerData">
                 <tr>
-                    <td>{{a.editData.coords.latitude}} / {{a.editData.coords.longitude}}</td>
+                    <td>{{a.currentMarkerData.coords.latitude}} / {{a.currentMarkerData.coords.longitude}}</td>
                 </tr>
                 <tr>
                     <td>
-                        <input type="text" ng-model="a.editData.options.labelContent">
+                        <input type="text" ng-model="a.currentMarkerData.options.labelContent">
                     </td>
                 </tr>
                 <tr>
-                    <td>
-                        <button ng-click="a.addData()">create</button>
+                    <td ng-if="!a.ctrl.editMode">
+                        <button ng-click="a.addMarker()">add marker</button>
+                    </td>
+                    <td ng-if="a.ctrl.editMode">
+                        <button ng-click="a.modifyMarker()">modify marker</button>
+                         <button ng-click="a.cancelMarkerEdit()">Cancel</button>
                     </td>
                 </tr>
             </table>
