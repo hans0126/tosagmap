@@ -61,7 +61,7 @@
         <div>
             <ui-gmap-google-map class="gmap" pan="true" center="a.map.center" zoom="a.map.zoom" options="a.map.options" events="a.map.events">
                 <ui-gmap-marker ng-repeat="value in a.marker" coords="value.coords" options="value.options" idkey="value.id" events="a.markerEvent">
-                    <ui-gmap-window ng-if="!a.ctrl.editMode" show="value.labelShow">{{value.options.labelContent}}</ui-gmap-window>
+                    <ui-gmap-window  show="value.labelShow">{{value.options.labelContent}}</ui-gmap-window>
                 </ui-gmap-marker>
                 <ui-gmap-map-type id="moon" options="a.moonMapType">
                 </ui-gmap-map-type>
@@ -85,7 +85,7 @@
                     </td>
                     <td ng-if="a.ctrl.editMode">
                         <button ng-click="a.modifyMarker()">modify marker</button>
-                         <button ng-click="a.cancelMarkerEdit()">Cancel</button>
+                        <button ng-click="a.cancelMarkerEdit()">Cancel</button>
                     </td>
                 </tr>
             </table>
